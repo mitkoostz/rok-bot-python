@@ -1,10 +1,9 @@
 import subprocess
 import cv2
 import numpy as np
-import glob
 
 
-class GameBot:
+class EmulatorController:
     def __init__(self, adb_path='adb', device_ip='127.0.0.1:5555'):
         self.adb_path = adb_path
         self.device_ip = device_ip
@@ -47,7 +46,7 @@ class GameBot:
         else:
             print("No device serial specified.")
 
-    def isImageFound(self, template_path, x_start, y_start, x_end, y_end, accuracyTreshold=0.6):
+    def isImageFound(self, template_path, x_start, y_start, x_end, y_end, accuracyThreshold=0.6):
         if self.device_serial:
             # Capture screenshot
             result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'],
@@ -71,32 +70,9 @@ class GameBot:
             res = cv2.matchTemplate(cropped_screenshot, template, cv2.TM_CCOEFF_NORMED)
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
-            if max_val > accuracyTreshold:  # Adjust threshold as needed
+            if max_val > accuracyThreshold:  # Adjust threshold as needed
                 return True
             else:
                 return False
         else:
             print("No device serial specified.")
-
-    def isInCombat(self):
-        retries = 3
-        for _ in range(retries):
-            combat_images = glob.glob("Templates/combat/combat*.png")
-            for image_path in combat_images:
-                if self.isImageFound(image_path, 1235, 209, 1256, 228):
-                    return True
-        return False
-
-    def isMarching(self):
-        retries = 5
-        for _ in range(retries):
-            if self.isImageFound("Templates/marching.png", 1235, 209, 1256, 228):
-                return True
-        return False
-
-    def isSearchButtonPresent(self):
-        retries = 3
-        for _ in range(retries):
-            if self.isImageFound("Templates/SearchButton.png", 189, 458, 356, 518):
-                return True
-        return False

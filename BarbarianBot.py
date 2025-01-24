@@ -1,11 +1,11 @@
 from Cordinates import Coordinates
 import time
+import glob
 
 
 class BarbarianBot:
-
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, emulator):
+        self.emulator = emulator
         self.initialBarbarianLevelStart = 11
 
     def run_bot(self):
@@ -53,7 +53,7 @@ class BarbarianBot:
         else:
             time.sleep(1)
         self.MarkTheBarbarians()
-        time.sleep(0.5)
+        time.sleep(0.3)
         self.ClickAttackButton()
         time.sleep(0.5)
         self.SelectTroops()
@@ -62,34 +62,48 @@ class BarbarianBot:
         time.sleep(1)
 
     def ClickSearchButton(self):
-        self.bot.click_button(*Coordinates.SEARCH_BAR)  # Click on the search bar
+        self.emulator.click_button(*Coordinates.SEARCH_BAR)  # Click on the search bar
 
     def SearchForBarbarians(self):
-        self.bot.click_button(*Coordinates.SEARCH_BARBARIANS_BUTTON)  # Click on the search barbarians button
+        self.emulator.click_button(*Coordinates.SEARCH_BARBARIANS_BUTTON)  # Click on the search barbarians button
 
     def IncreaseBarbarianLevel(self):
-        self.bot.click_button(*Coordinates.INCREASE_BARBARIAN_LEVEL)
+        self.emulator.click_button(*Coordinates.INCREASE_BARBARIAN_LEVEL)
 
     def DecreaseBarbarianLevel(self):
-        self.bot.click_button(*Coordinates.DECREASE_BARBARIAN_LEVEL)
+        self.emulator.click_button(*Coordinates.DECREASE_BARBARIAN_LEVEL)
 
     def MarkTheBarbarians(self):
-        self.bot.click_button(*Coordinates.BARBARIANS)  # Click on barbarians
+        self.emulator.click_button(*Coordinates.BARBARIANS)  # Click on barbarians
 
     def ClickAttackButton(self):
-        self.bot.click_button(*Coordinates.ATTACK_BUTTON)  # Click Attack button
+        self.emulator.click_button(*Coordinates.ATTACK_BUTTON)  # Click Attack button
 
     def SelectTroops(self):
-        self.bot.click_button(*Coordinates.SELECT_TROOPS)  # select troops
+        self.emulator.click_button(*Coordinates.SELECT_TROOPS)  # select troops
 
     def MarchAndStartAttack(self):
-        self.bot.click_button(*Coordinates.START_ATTACK)  # Start the attack
+        self.emulator.click_button(*Coordinates.START_ATTACK)  # Start the attack
 
     def IsSearchButtonPresent(self):
-        return self.bot.isSearchButtonPresent()
+        retries = 3
+        for _ in range(retries):
+            if self.emulator.isImageFound("Templates/SearchButton.png", 189, 458, 356, 518):
+                return True
+        return False
 
     def AreTroopsMarching(self):
-        return self.bot.isMarching()
+        retries = 5
+        for _ in range(retries):
+            if self.emulator.isImageFound("Templates/marching.png", 1235, 209, 1256, 228):
+                return True
+        return False
 
     def AreTroopsInCombat(self):
-        return self.bot.isInCombat()
+        retries = 3
+        for _ in range(retries):
+            combat_images = glob.glob("Templates/combat/combat*.png")
+            for image_path in combat_images:
+                if self.emulator.isImageFound(image_path, 1235, 209, 1256, 228):
+                    return True
+        return False
