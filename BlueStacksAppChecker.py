@@ -1,5 +1,6 @@
 import psutil
 
+
 class BlueStacksAppChecker:
     @staticmethod
     def is_bluestacks_running():
