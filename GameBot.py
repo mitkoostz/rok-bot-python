@@ -1,8 +1,8 @@
 import subprocess
-import time
 import cv2
 import numpy as np
 import glob
+
 
 class GameBot:
     def __init__(self, adb_path='adb', device_ip='127.0.0.1:5555'):
@@ -26,6 +26,7 @@ class GameBot:
         else:
             print("Failed to connect to device.")
             return False
+
     def set_resolution(self, width, height):
         if self.device_serial:
             print(f"Setting resolution to {width}x{height} for device {self.device_serial}")
@@ -38,16 +39,19 @@ class GameBot:
             print("ADB Error:", result.stderr)
         else:
             print("No device serial specified.")
+
     def click_button(self, x, y):
         if self.device_serial:
             subprocess.run([self.adb_path, '-s', self.device_serial, 'shell', 'input', 'tap', str(x), str(y)])
             print(f"Clicked at coordinates ({x}, {y})")
         else:
             print("No device serial specified.")
-    def isImageFound(self, template_path, x_start, y_start, x_end, y_end, accuracyTreshold = 0.6):
+
+    def isImageFound(self, template_path, x_start, y_start, x_end, y_end, accuracyTreshold=0.6):
         if self.device_serial:
             # Capture screenshot
-            result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'], capture_output=True)
+            result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'],
+                                    capture_output=True)
             screenshot = np.frombuffer(result.stdout, np.uint8)
             screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
 
@@ -67,40 +71,32 @@ class GameBot:
             res = cv2.matchTemplate(cropped_screenshot, template, cv2.TM_CCOEFF_NORMED)
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
-            # Debug information
-            #print(f"Template matching results: min_val={min_val}, max_val={max_val}, min_loc={min_loc}, max_loc={max_loc}")
-            #cv2.imwrite('captureregion.png', cropped_screenshot)
-            #print("Captured region saved as 'captureregion.png'.")
-
-            # If match is found, click the button and save the region
             if max_val > accuracyTreshold:  # Adjust threshold as needed
-                top_left = max_loc
-                center_x = top_left[0] + w // 2 + x_start
-                center_y = top_left[1] + h // 2 + y_start
-                #self.click_button(center_x, center_y)
-
-                # Extract and save the region
-                bottom_right = (top_left[0] + w, top_left[1] + h)
-                region = cropped_screenshot[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
-                #print(f"IMAGE FOUND! At coordinates ({center_x}, {center_y})")
                 return True
             else:
                 return False
         else:
             print("No device serial specified.")
+
     def isInCombat(self):
         retries = 3
         for _ in range(retries):
             combat_images = glob.glob("Templates/combat/combat*.png")
             for image_path in combat_images:
-                print(f"Checking {image_path}")
                 if self.isImageFound(image_path, 1235, 209, 1256, 228):
-                    print(f"Found and clicked {image_path}")
                     return True
         return False
+
     def isMarching(self):
         retries = 5
         for _ in range(retries):
             if self.isImageFound("Templates/marching.png", 1235, 209, 1256, 228):
+                return True
+        return False
+
+    def isSearchButtonPresent(self):
+        retries = 3
+        for _ in range(retries):
+            if self.isImageFound("Templates/SearchButton.png", 189, 458, 356, 518):
                 return True
         return False
