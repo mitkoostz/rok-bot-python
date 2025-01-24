@@ -1,7 +1,5 @@
 from BlueStacksAppChecker import BlueStacksAppChecker
-from ADBConnection import GameBot
-from ScreenshotCapturer import ScreenshotCapturer
-from ColorConstants import ColorConstants
+from GameBot import GameBot
 import time
 
 # Main function to check BlueStacks, ADB connection, and capture screenshot
@@ -10,8 +8,6 @@ def main():
         print("BlueStacks is running.")
         bot = GameBot()
         if bot.connect_device():
-            ScreenshotCapturer.capture_screenshot()
-
             while True:
                 bot.set_resolution(1280, 720)
                 isMarching = bot.isMarching()
