@@ -1,4 +1,5 @@
 from Cordinates import Coordinates
+from TroopsScanner import TroopsScanner
 import time
 import glob
 
@@ -7,6 +8,11 @@ class BarbarianBot:
     def __init__(self, emulator):
         self.emulator = emulator
         self.initialBarbarianLevelStart = 11
+        self.troopsScanner = TroopsScanner(emulator)
+        self.maximumPercentageThatTroopsAreAllowedToDecrease = 1
+        self.checkForHealingIntervalMinutes = 10
+        self.checkForHealingIntervalSeconds = self.checkForHealingIntervalMinutes * 60
+        self.checkForHealingLastExecutionTime = time.time()
 
     def run_bot(self):
         while True:
@@ -25,6 +31,15 @@ class BarbarianBot:
             while self.AreTroopsInCombat():
                 print("In combat.")
                 time.sleep(1)
+
+            # Check if troops are decreased and need refilling
+            current_time = time.time()
+            if current_time - self.checkForHealingLastExecutionTime >= self.checkForHealingIntervalSeconds:
+                needHealing = self.troopsScanner.AreTroopsDecreased(self.maximumPercentageThatTroopsAreAllowedToDecrease)
+                if needHealing is True:
+                    # TODO: Implement healing troops and refilling new troop group
+                    print("Troops are decreased. Healing is needed!!!!!!!!!.")
+                self.checkForHealingLastExecutionTime = current_time
 
     def AttackBarbarians(self):
         self.ClickSearchButton()
@@ -77,6 +92,7 @@ class BarbarianBot:
         self.emulator.click_button(*Coordinates.BARBARIANS)  # Click on barbarians
 
     def ClickAttackButton(self):
+        # TODO: Scan and check if attack button popped up on left or right side. Currently its hardcoded to right side which handles 95% of the cases.
         self.emulator.click_button(*Coordinates.ATTACK_BUTTON)  # Click Attack button
 
     def SelectTroops(self):

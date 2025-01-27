@@ -49,8 +49,7 @@ class EmulatorController:
     def isImageFound(self, template_path, x_start, y_start, x_end, y_end, accuracyThreshold=0.6):
         if self.device_serial:
             # Capture screenshot
-            result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'],
-                                    capture_output=True)
+            result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'], capture_output=True)
             screenshot = np.frombuffer(result.stdout, np.uint8)
             screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
 
@@ -76,3 +75,18 @@ class EmulatorController:
                 return False
         else:
             print("No device serial specified.")
+
+    def capture_region(self, x_start, y_start, x_end, y_end):
+        if self.device_serial:
+            # Capture screenshot
+            result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'], capture_output=True)
+            screenshot = np.frombuffer(result.stdout, np.uint8)
+            screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
+            # Crop the screenshot to the specified region
+            cropped_screenshot = screenshot[y_start:y_end, x_start:x_end]
+            cv2.imwrite('capturedScreenshotRegion.png', cropped_screenshot)
+
+            return cropped_screenshot
+        else:
+            print("No device serial specified.")
+            return None

@@ -8,13 +8,16 @@ def main():
     if BlueStacksAppChecker.is_bluestacks_running():
         print("BlueStacks is running.")
         emulator = EmulatorController()
-        barbarian_bot = BarbarianBot(emulator)
         if emulator.connect_device():
             emulator.set_resolution(1280, 720)
-            if startBot:
-                barbarian_bot.run_bot()
+            barbarian_bot = BarbarianBot(emulator)
+            if startBot is False:
+                # Test region start
+
+                # Test region end
+                print("Bot will not start as it is in DEBUG MODE")
             else:
-                print("Bot will not start!!!")
+                barbarian_bot.run_bot()
     else:
         print("BlueStacks is not running. Please start BlueStacks.")
 

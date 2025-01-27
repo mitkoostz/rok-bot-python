@@ -7,3 +7,5 @@ class Coordinates:
     START_ATTACK = (1030, 300)
     INCREASE_BARBARIAN_LEVEL = (406, 400)
     DECREASE_BARBARIAN_LEVEL = (133, 402)
+    TroopsInformationOpenButton = (1180, 147)
+    TroopsInformationCloseButton = (1091, 83)
