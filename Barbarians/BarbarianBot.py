@@ -1,18 +1,17 @@
-from Cordinates import Coordinates
-from TroopsScanner import TroopsScanner
+from Emulator.Cordinates import Coordinates
+from Barbarians.TroopsScanner import TroopsScanner
 import time
 import glob
 
 
 class BarbarianBot:
-    def __init__(self, emulator):
+    def __init__(self, emulator, maximumPercentageThatTroopsAreAllowedToDecrease, checkForHealingIntervalSeconds, initialBarbarianLevelStart = 11):
         self.emulator = emulator
-        self.initialBarbarianLevelStart = 11
         self.troopsScanner = TroopsScanner(emulator)
-        self.maximumPercentageThatTroopsAreAllowedToDecrease = 1
-        self.checkForHealingIntervalMinutes = 10
-        self.checkForHealingIntervalSeconds = self.checkForHealingIntervalMinutes * 60
+        self.maximumPercentageThatTroopsAreAllowedToDecrease = maximumPercentageThatTroopsAreAllowedToDecrease
+        self.checkForHealingIntervalSeconds = checkForHealingIntervalSeconds
         self.checkForHealingLastExecutionTime = time.time()
+        self.initialBarbarianLevelStart = initialBarbarianLevelStart
 
     def run_bot(self):
         while True:
@@ -24,9 +23,8 @@ class BarbarianBot:
             if not isMarching and not isInCombat:
                 self.AttackBarbarians()
             while self.AreTroopsMarching():
-                print("Marching to barbarians which will be attacked.")
+                print("Marching.")
                 time.sleep(1)
-            print("Marching is done.")
             time.sleep(2)
             while self.AreTroopsInCombat():
                 print("In combat.")
@@ -96,7 +94,7 @@ class BarbarianBot:
         self.emulator.click_button(*Coordinates.ATTACK_BUTTON)  # Click Attack button
 
     def SelectTroops(self):
-        self.emulator.click_button(*Coordinates.SELECT_TROOPS)  # select troops
+        self.emulator.click_button(*Coordinates.SELECT_TROOPS_FIRST)  # select troops
 
     def MarchAndStartAttack(self):
         self.emulator.click_button(*Coordinates.START_ATTACK)  # Start the attack
@@ -104,14 +102,14 @@ class BarbarianBot:
     def IsSearchButtonPresent(self):
         retries = 3
         for _ in range(retries):
-            if self.emulator.isImageFound("Templates/SearchButton.png", 189, 458, 356, 518):
+            if self.emulator.isImageFound("Templates/SearchButton.png", *Coordinates.SEARCH_BUTTON_COORDINATES_RIGHT_SIDE):
                 return True
         return False
 
     def AreTroopsMarching(self):
         retries = 5
         for _ in range(retries):
-            if self.emulator.isImageFound("Templates/marching.png", 1235, 209, 1256, 228):
+            if self.emulator.isImageFound("Templates/marching.png", *Coordinates.TROOPS_STATUS_ICON_FIRST) or self.emulator.isImageFound("Templates/marchingHome.png", *Coordinates.TROOPS_STATUS_ICON_FIRST):
                 return True
         return False
 
@@ -120,6 +118,6 @@ class BarbarianBot:
         for _ in range(retries):
             combat_images = glob.glob("Templates/combat/combat*.png")
             for image_path in combat_images:
-                if self.emulator.isImageFound(image_path, 1235, 209, 1256, 228):
+                if self.emulator.isImageFound(image_path, *Coordinates.TROOPS_STATUS_ICON_FIRST):
                     return True
         return False

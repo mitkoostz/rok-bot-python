@@ -1,6 +1,6 @@
-from Cordinates import Coordinates
+from Emulator.Cordinates import Coordinates
 import time
-from ImageNumberParser import ImageNumberParser
+from Emulator.ImageNumberExtractor import ImageNumberExtractor
 
 
 class TroopsScanner:
@@ -14,7 +14,7 @@ class TroopsScanner:
         self.emulator.click_button(*Coordinates.TroopsInformationOpenButton)
         time.sleep(1)
         troopsNumberImage = self.emulator.capture_region(480, 225, 670, 260)
-        troopsNumber = ImageNumberParser.parse_number_from_image(troopsNumberImage)
+        troopsNumber = ImageNumberExtractor.get_comma_separated_decimal(troopsNumberImage)
         print("Alive Troops number:", troopsNumber)
         time.sleep(1)
         self.emulator.click_button(*Coordinates.TroopsInformationCloseButton)

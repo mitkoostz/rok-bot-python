@@ -46,7 +46,7 @@ class EmulatorController:
         else:
             print("No device serial specified.")
 
-    def isImageFound(self, template_path, x_start, y_start, x_end, y_end, accuracyThreshold=0.6):
+    def isImageFound(self, template_path, x_start, y_start, x_end, y_end, filename='IsImageFoundRegion.png', accuracyThreshold=0.6):
         if self.device_serial:
             # Capture screenshot
             result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'], capture_output=True)
@@ -55,7 +55,7 @@ class EmulatorController:
 
             # Crop the screenshot to the specified region
             cropped_screenshot = screenshot[y_start:y_end, x_start:x_end]
-            cv2.imwrite('saerchRegion.png', cropped_screenshot)
+            cv2.imwrite(f'OutputImages/{filename}', cropped_screenshot)
 
             # Load template
             template = cv2.imread(template_path, cv2.IMREAD_COLOR)
@@ -76,7 +76,7 @@ class EmulatorController:
         else:
             print("No device serial specified.")
 
-    def capture_region(self, x_start, y_start, x_end, y_end):
+    def capture_region(self, x_start, y_start, x_end, y_end, filename='CapturedRegion.png'):
         if self.device_serial:
             # Capture screenshot
             result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'], capture_output=True)
@@ -84,9 +84,22 @@ class EmulatorController:
             screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
             # Crop the screenshot to the specified region
             cropped_screenshot = screenshot[y_start:y_end, x_start:x_end]
-            cv2.imwrite('capturedScreenshotRegion.png', cropped_screenshot)
+            cv2.imwrite(f'OutputImages/{filename}', cropped_screenshot)
 
             return cropped_screenshot
+        else:
+            print("No device serial specified.")
+            return None
+
+    def capture_screenshot(self, filename='screenshot.png'):
+        if self.device_serial:
+            # Capture screenshot
+            result = subprocess.run([self.adb_path, '-s', self.device_serial, 'exec-out', 'screencap', '-p'], capture_output=True)
+            screenshot = np.frombuffer(result.stdout, np.uint8)
+            screenshot = cv2.imdecode(screenshot, cv2.IMREAD_COLOR)
+            # Save the screenshot to a file
+            cv2.imwrite(filename, screenshot)
+            return screenshot
         else:
             print("No device serial specified.")
             return None
