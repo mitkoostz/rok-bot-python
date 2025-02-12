@@ -30,7 +30,7 @@ class ImageNumberExtractor:
         pil_image = Image.fromarray(image)
         # Use pytesseract to extract text from the image
         text = pytesseract.image_to_string(pil_image, config='--psm 6')
-        print("Extracted text: " + text)
+        #print("Extracted text: " + text)
         # Extract the numeric part from the text
         match = re.search(r'\d+', text)
         if match:

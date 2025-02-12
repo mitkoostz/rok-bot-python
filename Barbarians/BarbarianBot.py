@@ -8,9 +8,9 @@ import random
 
 class BarbarianBot:
     isFirstRun = True
-    lastSelectedBarbarianLevel = 0
+    lastSelectedBarbarianLevels = [0, 0, 0]  # List to keep track of the last selected barbarian levels for each troop group
 
-    def __init__(self, emulator, maximumPercentageThatTroopsAreAllowedToDecrease, checkForHealingIntervalSeconds, initialBarbarianLevelStart = 11, maxBarbLevel = 17):
+    def __init__(self, emulator, maximumPercentageThatTroopsAreAllowedToDecrease, checkForHealingIntervalSeconds, initialBarbarianLevelStart = 6, maxBarbLevel = 13):
         self.emulator = emulator
         self.NumberOfTroopGroups = 3
         self.troopsScanner = TroopsScanner(emulator)
@@ -26,12 +26,10 @@ class BarbarianBot:
             for troop_group in range(1, self.NumberOfTroopGroups + 1):
                 isMarching = self.AreTroopsMarching(troop_group)
                 isInCombat = self.AreTroopsInCombat(troop_group)
-                #print("Troop Group: " + str(troop_group) + "|Marching: " + str(isMarching))
-                #print("Troop Group: " + str(troop_group) + "|Combat: " + str(isInCombat))
                 time.sleep(0.1)
 
                 if not isMarching and not isInCombat:
-                    print("Troop Group: " + str(troop_group) + "is free. Performing barbarian attack.")
+                    print("Troop Group: " + str(troop_group) + " is free. Performing barbarian attack.")
                     self.AttackBarbarians(troop_group)
 
                 if isInCombat or isMarching:
@@ -54,21 +52,11 @@ class BarbarianBot:
         if BarbarianBot.isFirstRun:
             self.SetBarbarianLevel(self.initialBarbarianLevelStart)
 
-        currentBarbiarianLevel = self.BarbarianManager.get_current_selected_barbarian_level()
-        print("Current Barbarian Level: " + str(currentBarbiarianLevel))
-        print("Last Attacked Barbarian Level: " + str(BarbarianBot.lastSelectedBarbarianLevel))
-        requestedBarbarianLevel = currentBarbiarianLevel
-
-        if requestedBarbarianLevel > self.maxBarbLevel:
-            requestedBarbarianLevel = self.initialBarbarianLevelStart
-
-        # Ensure each troop group fights a different barbarian level
-        if BarbarianBot.lastSelectedBarbarianLevel == requestedBarbarianLevel:
-            requestedBarbarianLevel += random.choice([-2, -1, 1, 2])
-
-        print("New Barbarian Level: " + str(requestedBarbarianLevel))
-
+        print("Last Attacked Barbarian Levels: " + str(BarbarianBot.lastSelectedBarbarianLevels))
+        requestedBarbarianLevel = self.BarbarianManager.get_current_selected_barbarian_level()
+        requestedBarbarianLevel = self.get_unique_barbarian_level(requestedBarbarianLevel)
         self.SetBarbarianLevel(requestedBarbarianLevel)
+
         time.sleep(1)
         self.SearchForBarbarians()
         time.sleep(1)
@@ -78,17 +66,11 @@ class BarbarianBot:
         time.sleep(1)
         print("Search button present: " + str(isSearchButtonPresent))
         if isSearchButtonPresent:
+            notAvailableLevels = []
             while self.IsSearchButtonPresent():
-                print("Troop Group: " +str(troop_group) + " Barbarian level: " + str(currentBarbiarianLevel))
-                if requestedBarbarianLevel < self.maxBarbLevel:
-                    self.IncreaseBarbarianLevel()
-                    requestedBarbarianLevel += 1
-                    if requestedBarbarianLevel == BarbarianBot.lastSelectedBarbarianLevel:
-                        requestedBarbarianLevel += 1
-                    print("Barbarians level increased to: " + str(requestedBarbarianLevel))
-                else:
-                    requestedBarbarianLevel = self.initialBarbarianLevelStart
-                    self.SetBarbarianLevel(self.initialBarbarianLevelStart)
+                notAvailableLevels.append(requestedBarbarianLevel)
+                requestedBarbarianLevel = self.get_unique_barbarian_level(requestedBarbarianLevel, randomize=False, notAvailableLevels=notAvailableLevels)
+                self.SetBarbarianLevel(requestedBarbarianLevel)
                 time.sleep(0.3)
                 self.SearchForBarbarians()
                 time.sleep(1)
@@ -104,9 +86,32 @@ class BarbarianBot:
         self.SelectTroops(troop_group)
         time.sleep(0.5)
         self.MarchAndStartAttack(troop_group)
-        BarbarianBot.lastSelectedBarbarianLevel = requestedBarbarianLevel
+        BarbarianBot.lastSelectedBarbarianLevels[troop_group - 1] = requestedBarbarianLevel
         BarbarianBot.isFirstRun = False
         time.sleep(1)
+
+    def get_unique_barbarian_level(self, requestedBarbarianLevel, randomize=False, notAvailableLevels=None):
+        if requestedBarbarianLevel is None:
+            requestedBarbarianLevel = self.initialBarbarianLevelStart
+
+        valid_levels = set(range(self.initialBarbarianLevelStart, self.maxBarbLevel + 1))
+        last_selected_levels = set(BarbarianBot.lastSelectedBarbarianLevels)
+        available_levels = list(valid_levels - last_selected_levels)
+        if notAvailableLevels is not None:
+            print("Not available levels: " + str(notAvailableLevels))
+            available_levels = [level for level in available_levels if level not in notAvailableLevels]
+        print("Available levels for selection: " + str(available_levels))
+
+        if not available_levels:
+            return self.initialBarbarianLevelStart
+
+        if randomize:
+            choice = random.choice(available_levels)
+            print("Selecting random from possible levels: " + str(choice))
+            return choice
+
+        print("Selecting lowest possible level: " + str(min(available_levels)))
+        return min(available_levels)
 
     def ClickSearchButton(self):
         self.emulator.click_button(*Coordinates.SEARCH_BAR)  # Click on the search bar
@@ -190,6 +195,8 @@ class BarbarianBot:
 
     def SetBarbarianLevel(self, desired_level):
         currentBarbarianLevel = self.BarbarianManager.get_current_selected_barbarian_level()
+        if currentBarbarianLevel is None:
+            currentBarbarianLevel = self.initialBarbarianLevelStart
         while currentBarbarianLevel < desired_level:
             self.IncreaseBarbarianLevel()
             currentBarbarianLevel += 1
@@ -201,3 +208,6 @@ class BarbarianBot:
             currentBarbarianLevel -= 1
             print("Barbarians level decreased to: " + str(currentBarbarianLevel))
             time.sleep(0.5)
+
+        print("Barbarian level is set to: " + str(currentBarbarianLevel))
+
