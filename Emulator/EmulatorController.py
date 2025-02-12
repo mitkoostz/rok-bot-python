@@ -42,7 +42,7 @@ class EmulatorController:
     def click_button(self, x, y):
         if self.device_serial:
             subprocess.run([self.adb_path, '-s', self.device_serial, 'shell', 'input', 'tap', str(x), str(y)])
-            print(f"Clicked at coordinates ({x}, {y})")
+            #print(f"Clicked at coordinates ({x}, {y})")
         else:
             print("No device serial specified.")
 

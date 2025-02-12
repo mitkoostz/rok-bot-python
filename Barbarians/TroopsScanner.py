@@ -22,6 +22,8 @@ class TroopsScanner:
 
     def AreTroopsDecreased(self, percentage_threshold):
         currentTroopsNumber = self.ScanCurrentNumberOfTroops()
+        if currentTroopsNumber is None:
+            return False
         threshold = self.InitialTroopsNumber * (1 - percentage_threshold / 100)
         return currentTroopsNumber < threshold
 
