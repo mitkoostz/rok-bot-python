@@ -8,11 +8,11 @@ import random
 
 class BarbarianBot:
     isFirstRun = True
-    lastSelectedBarbarianLevels = [0, 0, 0]  # List to keep track of the last selected barbarian levels for each troop group
+    lastSelectedBarbarianLevels = [0, 0, 0]
 
-    def __init__(self, emulator, maximumPercentageThatTroopsAreAllowedToDecrease, checkForHealingIntervalSeconds, initialBarbarianLevelStart = 6, maxBarbLevel = 13):
+    def __init__(self, emulator, maximumPercentageThatTroopsAreAllowedToDecrease, checkForHealingIntervalSeconds, initialBarbarianLevelStart = 11, maxBarbLevel = 17):
         self.emulator = emulator
-        self.NumberOfTroopGroups = 3
+        self.NumberOfTroopGroups = []
         self.troopsScanner = TroopsScanner(emulator)
         self.BarbarianManager = BarbarianLevelManager(emulator)
         self.maximumPercentageThatTroopsAreAllowedToDecrease = maximumPercentageThatTroopsAreAllowedToDecrease
@@ -23,7 +23,15 @@ class BarbarianBot:
 
     def run_bot(self):
         while True:
-            for troop_group in range(1, self.NumberOfTroopGroups + 1):
+            self.update_troop_groups()
+            if (len(self.NumberOfTroopGroups) == 0):
+                print("No troop groups found. Exiting the bot.")
+                break
+            for troop_group, isAlive in self.NumberOfTroopGroups:
+                if not isAlive:
+                    print("Troop Group: " + str(troop_group) + " is DEAD. Skipping this group.")
+                    continue
+
                 isMarching = self.AreTroopsMarching(troop_group)
                 isInCombat = self.AreTroopsInCombat(troop_group)
                 time.sleep(0.1)
@@ -45,6 +53,16 @@ class BarbarianBot:
                         print("Troops are decreased. Healing is needed!!!!!!!!!.")
                     self.checkForHealingLastExecutionTime = current_time
                     """
+
+    def update_troop_groups(self):
+        self.NumberOfTroopGroups = []
+        numberOfTroopGroups = self.troopsScanner.GetNumberOfTroopGroups()
+        if numberOfTroopGroups is None:
+            return
+        for i in range(1, numberOfTroopGroups + 1):
+            isAlive = not self.AreTroopsDead(i)
+            self.NumberOfTroopGroups.append((i, isAlive))
+        print(f"All Troop Groups: {self.NumberOfTroopGroups}")
 
     def AttackBarbarians(self, troop_group):
         self.ClickSearchButton()
@@ -81,7 +99,10 @@ class BarbarianBot:
             time.sleep(1)
         self.MarkTheBarbarians()
         time.sleep(0.5)
-        self.ClickAttackButton()
+        selected = self.ClickAttackButton()
+        if not selected:
+            return
+
         time.sleep(0.5)
         self.SelectTroops(troop_group)
         time.sleep(0.5)
@@ -130,9 +151,21 @@ class BarbarianBot:
 
     def ClickAttackButton(self):
         # TODO: Scan and check if attack button popped up on left or right side. Currently its hardcoded to right side which handles 95% of the cases.
-        self.emulator.click_button(*Coordinates.ATTACK_BUTTON)  # Click Attack button
+        self.emulator.click_button(*Coordinates.ATTACK_BUTTON)
+        time.sleep(0.3)
+        if self.IsNewTroopsButtonPresent():
+            return True
+        self.RefreshOpenWorldView()
+        return False
+
+    def RefreshOpenWorldView(self):
+        # TODO: Make this function to scan image and always finish with open world view
+        self.emulator.click_button(*Coordinates.CASTLE_OPEN_AREA_BUTTON)
+        time.sleep(2.5)
+        self.emulator.click_button(*Coordinates.CASTLE_OPEN_AREA_BUTTON)
 
     def SelectTroops(self, troop_group):
+        #TODO: Check if the troops that are for selection are not decreased troop_group because of deead troop group
         print("Selecting Troop Group: " + str(troop_group))
         if troop_group == 1:
             self.emulator.click_button(*Coordinates.SELECT_TROOPS_FIRST)
@@ -156,6 +189,13 @@ class BarbarianBot:
                 return True
         return False
 
+    def IsNewTroopsButtonPresent(self):
+        retries = 3
+        for _ in range(retries):
+            if self.emulator.isImageFound("Templates/NewTroopsButton.png", *Coordinates.New_Troops_Button):
+                return True
+        return False
+
     def AreTroopsMarching(self, troop_group):
         if troop_group == 1:
             coordinates = Coordinates.TROOPS_STATUS_ICON_FIRST
@@ -167,10 +207,27 @@ class BarbarianBot:
             raise ValueError("Invalid troop group")
 
         x_start, y_start, x_end, y_end = coordinates
-        retries = 5
+        retries = 3
         for _ in range(retries):
             if self.emulator.isImageFound("Templates/marching.png", x_start, y_start, x_end, y_end) or \
                self.emulator.isImageFound("Templates/marchingHome.png", x_start, y_start, x_end, y_end):
+                return True
+        return False
+
+    def AreTroopsDead(self, troop_group):
+        if troop_group == 1:
+            coordinates = Coordinates.TROOPS_STATUS_ICON_FIRST
+        elif troop_group == 2:
+            coordinates = Coordinates.TROOPS_STATUS_ICON_SECOND
+        elif troop_group == 3:
+            coordinates = Coordinates.TROOPS_STATUS_ICON_THIRTH
+        else:
+            raise ValueError("Invalid troop group")
+
+        x_start, y_start, x_end, y_end = coordinates
+        retries = 3
+        for _ in range(retries):
+            if self.emulator.isImageFound("Templates/dead.png", x_start, y_start, x_end, y_end):
                 return True
         return False
 
@@ -187,7 +244,8 @@ class BarbarianBot:
         x_start, y_start, x_end, y_end = coordinates
         retries = 3
         for _ in range(retries):
-            combat_images = glob.glob("Templates/combat/combat*.png")
+            #combat_images = glob.glob("Templates/combat/combat*.png")
+            combat_images = glob.glob("Templates/combat/combat.png")
             for image_path in combat_images:
                 if self.emulator.isImageFound(image_path, x_start, y_start, x_end, y_end):
                     return True

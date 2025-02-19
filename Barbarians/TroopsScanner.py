@@ -27,3 +27,10 @@ class TroopsScanner:
         threshold = self.InitialTroopsNumber * (1 - percentage_threshold / 100)
         return currentTroopsNumber < threshold
 
+    def GetNumberOfTroopGroups(self):
+        time.sleep(1)
+        troopGroupNumberImage = self.emulator.capture_region(1206, 135, 1223, 153)
+        troopsGroupNumber = ImageNumberExtractor.get_troops_total_integer(troopGroupNumberImage)
+        #print("Troop Groups:", troopsGroupNumber)
+        return troopsGroupNumber
+

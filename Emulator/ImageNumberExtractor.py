@@ -17,6 +17,15 @@ class ImageNumberExtractor:
     @staticmethod
     def get_integer_from_image(image):
         match = ImageNumberExtractor.get_first_number_match(image, r'\d+')
+        print("First match text: " + str(match))
+        if match is not None:
+            return int(match)
+        else:
+            return None
+
+    @staticmethod
+    def get_troops_total_integer(image):
+        match = ImageNumberExtractor.get_first_number_match(image, r'\d+(?=\D)')
         #print("First match text: " + str(match))
         if match is not None:
             return int(match)
@@ -32,7 +41,7 @@ class ImageNumberExtractor:
         text = pytesseract.image_to_string(pil_image, config='--psm 6')
         #print("Extracted text: " + text)
         # Extract the numeric part from the text
-        match = re.search(r'\d+', text)
+        match = re.search(regex, text)
         if match:
             return match.group(0)
         else:

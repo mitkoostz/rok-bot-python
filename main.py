@@ -2,6 +2,8 @@ from BlueStackEmulator.BlueStacksAppChecker import BlueStacksAppChecker
 from Emulator.EmulatorController import EmulatorController
 from Barbarians.BarbarianBot import BarbarianBot
 from Barbarians.BarbarianLevelManager import BarbarianLevelManager
+from Emulator.Cordinates import Coordinates
+import time
 import configparser
 
 
@@ -25,6 +27,11 @@ def main():
             barbarian_bot = BarbarianBot(emulator, max_troop_decrease_percentage, check_for_healing_interval_seconds)
             if startBot is False:
                 # Test region start
+                count = 1
+                while True:
+                    emulator.capture_region(*Coordinates.TROOPS_STATUS_ICON_FIRST, "FirstGroupStatus.png")
+                    count += 1
+                    time.sleep(2)
                 # Test region end
                 print("Bot will not start as it is in DEBUG MODE")
             else:
