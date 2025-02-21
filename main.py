@@ -27,9 +27,6 @@ def main():
             barbarian_bot = BarbarianBot(emulator, max_troop_decrease_percentage, check_for_healing_interval_seconds)
             if startBot is False:
                 # Test region start
-                barbarian_bot.spawn_troop_groups()
-
-
                 # Test region end
                 print("Bot will not start as it is in DEBUG MODE")
             else:

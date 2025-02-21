@@ -4,6 +4,7 @@ from .BarbarianLevelManager import BarbarianLevelManager
 import time
 import glob
 import random
+from typing import List, Tuple
 
 
 class BarbarianBot:
@@ -12,9 +13,8 @@ class BarbarianBot:
 
     def __init__(self, emulator, maxTroopDecreasePercentage, healingCheckInterval, initialBarbarianLevel=11, maxBarbLevel=17):
         self.emulator = emulator
-        self.StartingTroopGroups = [1, 2, 3]
-        self.NumberOfTroopGroups = []
-        self.TroopGroupsButtonMapping = {}
+        self.StartingTroopGroups = {1: 3, 2: 2, 3: 1}
+        self.NumberOfTroopGroups: List[Tuple[int, bool]] = []
         self.troopsScanner = TroopsScanner(emulator)
         self.BarbarianManager = BarbarianLevelManager(emulator)
         self.maxTroopDecreasePercentage = maxTroopDecreasePercentage
@@ -27,8 +27,10 @@ class BarbarianBot:
         while True:
             self.update_troop_groups()
             if not self.NumberOfTroopGroups:
+                first_troop_number = list(self.StartingTroopGroups.keys())[0]
+                first_troop_button_number = self.StartingTroopGroups[first_troop_number]
                 print(f"No troop groups found. Spawning troop groups: {self.StartingTroopGroups}")
-                self.spawn_troop_group(1, self.StartingTroopGroups[-1])
+                self.spawn_troop_group(first_troop_number, first_troop_button_number)
                 continue
 
             for troop_group, isAlive in self.NumberOfTroopGroups:
@@ -52,21 +54,17 @@ class BarbarianBot:
         print(f"All Troop Groups: {self.NumberOfTroopGroups}")
 
     def spawn_one_missing_troop_group(self):
-        missingTroopGroups = self.get_missing_troop_groups()
-        for troop_group in self.StartingTroopGroups:
+        existing_troop_groups = {troop_group for troop_group, _ in self.NumberOfTroopGroups}
+        remaining_troop_groups = {k: v for k, v in self.StartingTroopGroups.items() if k not in self.NumberOfTroopGroups}
+        print(f"Remaining troop groups to spawn: {remaining_troop_groups}")
+        for troop_group, buttonNumber in remaining_troop_groups.items():
             if len(self.NumberOfTroopGroups) >= len(self.StartingTroopGroups):
                 continue
-            quick_button = self.TroopGroupsButtonMapping.get(troop_group, missingTroopGroups[0])
-            print(f"Spawning troop group: {troop_group} with quick button: {quick_button}")
-            self.spawn_troop_group(troop_group, quick_button)
+            print(f"Spawning troop group: {troop_group} with quick button: {buttonNumber}")
+            self.spawn_troop_group(troop_group, buttonNumber)
             return
 
-    def get_missing_troop_groups(self):
-        mapped_values = set(self.TroopGroupsButtonMapping.values())
-        starting_values = set(self.StartingTroopGroups)
-        return list(starting_values - mapped_values)
-
-    def spawn_troop_group(self, troop_group, quick_button):
+    def spawn_troop_group(self, troop_group, buttonNumber):
         self.RefreshOpenWorldView()
         self.emulator.click_button(400, 350)
         time.sleep(1)
@@ -77,12 +75,11 @@ class BarbarianBot:
         time.sleep(1)
         self.emulator.click_button(1000, 142)
         time.sleep(1)
-        self.emulator.click_button(1103, 258 + (quick_button - 1) * 55)
+        self.emulator.click_button(1103, 258 + (buttonNumber - 1) * 55)
         time.sleep(1)
         #TODO: Check if troop group is spawned, if not close this window
         self.emulator.click_button(920, 637)
         self.NumberOfTroopGroups.append((troop_group, True))
-        self.TroopGroupsButtonMapping[troop_group] = quick_button
         time.sleep(1)
 
     def AttackBarbarians(self, troop_group):
