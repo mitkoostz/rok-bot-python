@@ -16,8 +16,9 @@ class BarbarianBot:
              emulator,
              maxTroopDecreasePercentage: int,
              healingCheckInterval: int,
-             initialBarbarianLevel: int = 11,
-             maxBarbLevel: int = 17
+             starting_barbarian_level: int,
+             minBarbLevel: int,
+             maxBarbLevel: int
             ):
 
         self.emulator = emulator
@@ -28,7 +29,8 @@ class BarbarianBot:
         self.maxTroopDecreasePercentage: int = maxTroopDecreasePercentage
         self.healingCheckInterval: int = healingCheckInterval
         self.lastHealingCheckTime: float = time.time()
-        self.initialBarbarianLevel: int = initialBarbarianLevel
+        self.initialBarbarianLevel: int = starting_barbarian_level
+        self.minBarbLevel: int = minBarbLevel
         self.maxBarbLevel: int = maxBarbLevel
 
     def run_bot(self):
@@ -136,7 +138,7 @@ class BarbarianBot:
             requestedBarbarianLevel = self.initialBarbarianLevel
         if notAvailableLevels is None or len(notAvailableLevels) > 15:
             return self.initialBarbarianLevel
-        valid_levels = set(range(self.initialBarbarianLevel, self.maxBarbLevel + 1))
+        valid_levels = set(range(self.minBarbLevel, self.maxBarbLevel + 1))
         available_levels = list(valid_levels - set(BarbarianBot.lastSelectedBarbarianLevels))
         print(f"Previously selected barb levels: {BarbarianBot.lastSelectedBarbarianLevels}")
         print(f"Available barb levels to attack: {available_levels}")

@@ -16,7 +16,9 @@ def main():
     bluestacks_executable_name = config['BlueStacks']['ExecutableName']
     max_troop_decrease_percentage = config.getint('BarbarianBotSettings', 'MaximumPercentageThatTroopsAreAllowedToDecrease')
     check_for_healing_interval_seconds = config.getint('BarbarianBotSettings', 'CheckForHealingIntervalSeconds')
-    initial_barbarian_level = config.getint('BarbarianBotSettings', 'InitialBarbarianLevelStart')
+    starting_barbarian_level = config.getint('BarbarianBotSettings', 'StartingBarbarianLevel')
+    min_barbarian_level = config.getint('BarbarianBotSettings', 'MinimumBarbarianLevel')
+    max_barbarian_level = config.getint('BarbarianBotSettings', 'MaximumBarbarianLevel')
 
     startBot = True
     if BlueStacksAppChecker.is_bluestacks_running(bluestacks_executable_name):
@@ -24,7 +26,7 @@ def main():
         emulator = EmulatorController()
         if emulator.connect_device():
             emulator.set_resolution(resolution_width, resolution_height)
-            barbarian_bot = BarbarianBot(emulator, max_troop_decrease_percentage, check_for_healing_interval_seconds)
+            barbarian_bot = BarbarianBot(emulator, max_troop_decrease_percentage, check_for_healing_interval_seconds, starting_barbarian_level, min_barbarian_level, max_barbarian_level)
             if startBot is False:
                 # Test region start
                 # Test region end
