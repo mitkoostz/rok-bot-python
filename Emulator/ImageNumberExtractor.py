@@ -17,7 +17,7 @@ class ImageNumberExtractor:
     @staticmethod
     def get_integer_from_image(image):
         match = ImageNumberExtractor.get_first_number_match(image, r'\d+')
-        print("First match text: " + str(match))
+        #print("First match text: " + str(match))
         if match is not None:
             return int(match)
         else:

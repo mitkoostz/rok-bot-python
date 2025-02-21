@@ -4,24 +4,32 @@ from .BarbarianLevelManager import BarbarianLevelManager
 import time
 import glob
 import random
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 
 class BarbarianBot:
-    isFirstBarbarianFight = True
-    lastSelectedBarbarianLevels = [0, 0, 0]
+    isFirstBarbarianFight: bool = True
+    lastSelectedBarbarianLevels: List[int] = [0, 0, 0]
 
-    def __init__(self, emulator, maxTroopDecreasePercentage, healingCheckInterval, initialBarbarianLevel=11, maxBarbLevel=17):
+    def __init__(
+             self,
+             emulator,
+             maxTroopDecreasePercentage: int,
+             healingCheckInterval: int,
+             initialBarbarianLevel: int = 11,
+             maxBarbLevel: int = 17
+            ):
+
         self.emulator = emulator
-        self.StartingTroopGroups = {1: 3, 2: 2, 3: 1}
+        self.StartingTroopGroups: Dict[int, int] = {1: 3, 2: 2, 3: 1}
         self.NumberOfTroopGroups: List[Tuple[int, bool]] = []
         self.troopsScanner = TroopsScanner(emulator)
         self.BarbarianManager = BarbarianLevelManager(emulator)
-        self.maxTroopDecreasePercentage = maxTroopDecreasePercentage
-        self.healingCheckInterval = healingCheckInterval
-        self.lastHealingCheckTime = time.time()
-        self.initialBarbarianLevel = initialBarbarianLevel
-        self.maxBarbLevel = maxBarbLevel
+        self.maxTroopDecreasePercentage: int = maxTroopDecreasePercentage
+        self.healingCheckInterval: int = healingCheckInterval
+        self.lastHealingCheckTime: float = time.time()
+        self.initialBarbarianLevel: int = initialBarbarianLevel
+        self.maxBarbLevel: int = maxBarbLevel
 
     def run_bot(self):
         while True:
@@ -51,8 +59,9 @@ class BarbarianBot:
         if numberOfTroopGroups is None:
             return
         self.NumberOfTroopGroups = [(i, not self.AreTroopsDead(i)) for i in range(1, numberOfTroopGroups + 1)]
-        print(f"All Troop Groups: {self.NumberOfTroopGroups}")
-
+        for troop_group, isAlive in self.NumberOfTroopGroups:
+            status = "Alive" if isAlive else "Dead"
+            print(f"Group {troop_group} is {status}")
     def spawn_one_missing_troop_group(self):
         existing_troop_groups = {troop_group for troop_group, _ in self.NumberOfTroopGroups}
         remaining_troop_groups = {k: v for k, v in self.StartingTroopGroups.items() if k not in self.NumberOfTroopGroups}
@@ -224,11 +233,9 @@ class BarbarianBot:
         while currentBarbarianLevel < desired_level:
             self.IncreaseBarbarianLevel()
             currentBarbarianLevel += 1
-            print(f"Barbarians level increased to: {currentBarbarianLevel}")
             time.sleep(0.5)
         while currentBarbarianLevel > desired_level:
             self.DecreaseBarbarianLevel()
             currentBarbarianLevel -= 1
-            print(f"Barbarians level decreased to: {currentBarbarianLevel}")
             time.sleep(0.5)
         print(f"Barbarian level is set to: {currentBarbarianLevel}")
