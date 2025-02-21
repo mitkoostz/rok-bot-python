@@ -6,7 +6,7 @@ from Emulator.ImageNumberExtractor import ImageNumberExtractor
 class TroopsScanner:
     def __init__(self, emulator):
         self.emulator = emulator
-        self.InitialTroopsNumber = self.ScanCurrentNumberOfTroops()
+        self.InitialTroopsNumber = 0
         print("Initial/Starting Troops number:", self.InitialTroopsNumber)
 
     def ScanCurrentNumberOfTroops(self):
